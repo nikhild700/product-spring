@@ -1,0 +1,28 @@
+# Logs
+logs/
+*.log
+
+# OS junk
+.DS_Store
+
+# IDE settings
+.vscode/
+.idea/
+*.iml
+
+# Git
+.git/
+.gitignore
+
+# Maven wrapper cache
+.mvn/
+.mvnw.cmd
+mvnw
+
+# Node modules (if ever added)
+node_modules/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
