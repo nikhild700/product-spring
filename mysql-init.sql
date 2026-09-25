@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS product (
 );
 
 CREATE TABLE IF NOT EXISTS product_details (
-    details_id INT AUTO_INCREMENT PRIMARY KEY,
+    detail_id INT AUTO_INCREMENT PRIMARY KEY,
     product_id INT NOT NULL,
     description TEXT,
     price DECIMAL(10,2),
