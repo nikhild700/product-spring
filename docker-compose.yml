@@ -9,23 +9,23 @@ services:
       MYSQL_DATABASE: product_catalog
       MYSQL_USER: user1
       MYSQL_PASSWORD: user1
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   product-app:
     build: .
     container_name: product-spring-app
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     ports:
       - "8080:8080"
-    environment:
-      DB_URL: jdbc:mysql://mysql:3306/product_catalog?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      DB_USER: user1
-      DB_PASSWORD: user1
 
 volumes:
   mysql_data:
