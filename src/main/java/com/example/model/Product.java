@@ -9,9 +9,9 @@ public class Product {
     public Product() {
     }
 
-    public Product(String name, String sku) {
-        this.name = name;
+    public Product(String sku, String name) {
         this.sku = sku;
+        this.name = name;
     }
 
     public Integer getProductId() {
