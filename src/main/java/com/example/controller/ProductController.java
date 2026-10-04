@@ -1,9 +1,16 @@
 package com.example.controller;
 
 import com.example.dto.*;
+import com.example.model.ProductDetails;
 import com.example.service.ProductService;
 
-import org.springframework.http.ResponseEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,99 +25,81 @@ public class ProductController {
         this.productService = productService;
     }
 
-    // GET /products/sku?value=SKU123
+    @Operation(summary = "Get product by SKU", description = "Returns product details for the given SKU")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Product found", content = @Content(schema = @Schema(implementation = ProductDetails.class))),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid SKU format", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/sku")
-    public ResponseEntity<?> getBySku(@RequestParam(required = false) String value) {
-        if (value == null || value.isBlank()) {
-            return ResponseEntity.badRequest().body("Missing required query parameter: value");
-        }
+    public ProductDetails getBySku(
+            @Parameter(description = "SKU of the product", required = true) @RequestParam String value) {
 
-        var dto = new GetProductBySkuDTO(value);
-        var product = productService.getProductBySku(dto);
-
-        if (product == null) {
-            return ResponseEntity.status(404).body("Product not found for SKU: " + value);
-        }
-
-        return ResponseEntity.ok(product);
+        return productService.getProductBySku(new GetProductBySkuDTO(value));
     }
 
-    // GET /products/name?value=ProductA
+    @Operation(summary = "Get product by name", description = "Returns a list of products with the given name")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Products found", content = @Content(schema = @Schema(implementation = ProductDetails.class))),
+            @ApiResponse(responseCode = "404", description = "Products not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse (responseCode = "400", description = "Invalid name format", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/name")
-    public ResponseEntity<?> getByName(@RequestParam(required = false) String value) {
-        if (value == null || value.isBlank()) {
-            return ResponseEntity.badRequest().body("Missing required query parameter: value");
-        }
-
-        var dto = new GetProductByNameDTO(value);
-        List<?> products = productService.getProductByName(dto);
-
-        if (products == null || products.isEmpty()) {
-            return ResponseEntity.status(404).body("Product not found for name: " + value);
-        }
-
-        return ResponseEntity.ok(products);
+    public List<ProductDetails> getByName(@Valid GetProductByNameDTO dto) {
+        return productService.getProductByName(dto);
     }
 
-    // GET /products/price?min=10&max=100
+    @Operation(summary = "Get products within a price range", description = "Returns a list of products within the specified price range")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Products found", content = @Content(schema = @Schema(implementation = ProductDetails.class))),
+            @ApiResponse(responseCode = "404", description = "Products not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid price range", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/price")
-    public ResponseEntity<?> getByPriceRange(
-            @RequestParam(required = false) Double min,
-            @RequestParam(required = false) Double max) {
-
-        if (min == null || max == null) {
-            return ResponseEntity.badRequest().body("Missing required query parameters: min and/or max");
-        }
-
-        // Validate that min and max are non-negative
-        if (min < 0 || max < 0) {
-            return ResponseEntity.badRequest().body("Price values must be non-negative");
-        }
-
-        // Validate that min is less than or equal to max
-        if (min > max) {
-            return ResponseEntity.badRequest().body("Invalid price range: min should be less than or equal to max");
-        }
-
-        var dto = new GetProductWithinPriceRangeDTO(min, max);
-        var products = productService.getProductsWithinPriceRange(dto);
-
-        if (products == null || products.isEmpty()) {
-            return ResponseEntity.status(404).body("No products found within the specified price range.");
-        }
-
-        return ResponseEntity.ok(products);
+    public List<ProductDetails> getByPriceRange(@Valid GetProductWithinPriceRangeDTO dto) {
+        return productService.getProductsWithinPriceRange(dto);
     }
 
-    // POST /products
+    @Operation(summary = "Create a new product", description = "Creates a new product with the provided details")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Product created successfully", content = @Content(schema = @Schema(implementation = Integer.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody CreateProductDTO dto) {
-        var id = productService.insertProductAndProductDetails(dto);
-        return ResponseEntity.status(201).body("Created product with id: " + id);
+    public int createProduct(@Valid @RequestBody CreateProductDTO dto) {
+        return productService.insertProductAndProductDetails(dto);
     }
 
-    // PUT /products/product
+    @Operation(summary = "Update an existing product", description = "Updates the details of an existing product")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Product updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PutMapping("/product")
-    public ResponseEntity<?> updateProduct(@RequestBody UpdateProductDTO dto) {
+    public void updateProduct(@Valid @RequestBody UpdateProductDTO dto) {
         productService.updateProduct(dto);
-        return ResponseEntity.ok("Updated product with id: " + dto.productId());
     }
 
-    // PUT /products/details
+    @Operation(summary = "Update product details", description = "Updates the details of an existing product")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Product details updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PutMapping("/details")
-    public ResponseEntity<?> updateProductDetails(@RequestBody UpdateProductDTO dto) {
+    public void updateProductDetails(@Valid @RequestBody UpdateProductDTO dto) {
         productService.updateProductDetails(dto);
-        return ResponseEntity.ok("Updated product details with id: " + dto.detailId());
     }
 
-    // DELETE /products/delete?id=123
+    @Operation(summary = "Delete a product", description = "Deletes an existing product")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Product deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteProduct(@RequestParam(required = false) Integer id) {
-        if (id == null) {
-            return ResponseEntity.badRequest().body("Missing required query parameter: id");
-        }
-
-        productService.deleteProduct(new RemoveProductDTO(id));
-        return ResponseEntity.ok("Product deleted");
+    public void deleteProduct(@Valid RemoveProductDTO dto) {
+        productService.deleteProduct(dto);
     }
 }
