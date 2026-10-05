@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,21 +34,24 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid SKU format", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/sku")
-    public ProductDetails getBySku(
+    public ResponseEntity<ProductDetails> getBySku(
             @Parameter(description = "SKU of the product", required = true) @RequestParam String value) {
 
-        return productService.getProductBySku(new GetProductBySkuDTO(value));
+        ProductDetails details = productService.getProductBySku(new GetProductBySkuDTO(value));
+        return ResponseEntity.ok(details);
     }
 
     @Operation(summary = "Get product by name", description = "Returns a list of products with the given name")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Products found", content = @Content(schema = @Schema(implementation = ProductDetails.class))),
             @ApiResponse(responseCode = "404", description = "Products not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse (responseCode = "400", description = "Invalid name format", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "Invalid name format", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/name")
-    public List<ProductDetails> getByName(@Valid GetProductByNameDTO dto) {
-        return productService.getProductByName(dto);
+    public ResponseEntity<List<ProductDetails>> getByName(
+            @Valid @ModelAttribute GetProductByNameDTO dto) {
+
+        return ResponseEntity.ok(productService.getProductByName(dto));
     }
 
     @Operation(summary = "Get products within a price range", description = "Returns a list of products within the specified price range")
@@ -56,8 +61,10 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid price range", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/price")
-    public List<ProductDetails> getByPriceRange(@Valid GetProductWithinPriceRangeDTO dto) {
-        return productService.getProductsWithinPriceRange(dto);
+    public ResponseEntity<List<ProductDetails>> getByPriceRange(
+            @Valid @ModelAttribute GetProductWithinPriceRangeDTO dto) {
+
+        return ResponseEntity.ok(productService.getProductsWithinPriceRange(dto));
     }
 
     @Operation(summary = "Create a new product", description = "Creates a new product with the provided details")
@@ -66,8 +73,11 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public int createProduct(@Valid @RequestBody CreateProductDTO dto) {
-        return productService.insertProductAndProductDetails(dto);
+    public ResponseEntity<Integer> createProduct(
+            @Valid @RequestBody CreateProductDTO dto) {
+
+        int id = productService.insertProductAndProductDetails(dto);
+        return ResponseEntity.status(201).body(id);
     }
 
     @Operation(summary = "Update an existing product", description = "Updates the details of an existing product")
@@ -77,8 +87,11 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping("/product")
-    public void updateProduct(@Valid @RequestBody UpdateProductDTO dto) {
+    public ResponseEntity<Void> updateProduct(
+            @Valid @RequestBody UpdateProductDTO dto) {
+
         productService.updateProduct(dto);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Update product details", description = "Updates the details of an existing product")
@@ -88,8 +101,11 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping("/details")
-    public void updateProductDetails(@Valid @RequestBody UpdateProductDTO dto) {
+    public ResponseEntity<Void> updateProductDetails(
+            @Valid @RequestBody UpdateProductDTO dto) {
+
         productService.updateProductDetails(dto);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Delete a product", description = "Deletes an existing product")
@@ -99,7 +115,10 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/delete")
-    public void deleteProduct(@Valid RemoveProductDTO dto) {
+    public ResponseEntity<Void> deleteProduct(
+            @Valid @ModelAttribute RemoveProductDTO dto) {
+
         productService.deleteProduct(dto);
+        return ResponseEntity.ok().build();
     }
 }
