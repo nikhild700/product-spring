@@ -8,6 +8,7 @@ import java.util.List;
 import com.example.model.Product;
 import com.example.model.ProductDetails;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -30,7 +31,11 @@ public class ProductRepository {
                     WHERE p.sku = ?
                 """;
 
-        return jdbc.queryForObject(sql, new ProductRowMapper(), sku);
+        try {
+            return jdbc.queryForObject(sql, new ProductRowMapper(), sku);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 
     public List<ProductDetails> findByName(String name) {

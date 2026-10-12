@@ -1,4 +1,7 @@
 package com.example.dto;
 
-public record GetProductByNameDTO(String name) {
+import jakarta.validation.constraints.NotBlank;
+
+public record GetProductByNameDTO(
+        @NotBlank(message = "Name is required") String name) {
 }

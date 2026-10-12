@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.dto.RemoveProductDTO;
 import com.example.dto.UpdateProductDTO;
+import com.example.exception.ProductNotFoundException;
 import com.example.dao.ProductRepository;
 
 import org.springframework.stereotype.Service;
@@ -30,7 +31,12 @@ public class ProductService {
     // GET /products/sku
     @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
     public ProductDetails getProductBySku(GetProductBySkuDTO dto) {
-        return productRepository.findBySku(dto.sku());
+        // return productRepository.findBySku(dto.sku());
+        ProductDetails details = productRepository.findBySku(dto.sku());
+        if (details == null) {
+            throw new ProductNotFoundException("Product with SKU " + dto.sku() + " not found");
+        }
+        return details;
     }
 
     // GET /products/name

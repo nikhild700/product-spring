@@ -1,3 +1,7 @@
 package com.example.dto;
 
-public record RemoveProductDTO(int productId) implements ProductDTO {}
+import jakarta.validation.constraints.NotNull;
+
+public record RemoveProductDTO(
+        @NotNull Integer productId) implements ProductDTO {
+}

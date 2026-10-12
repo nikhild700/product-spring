@@ -1,5 +1,7 @@
 package com.example.dto;
 
-public record GetProductBySkuDTO(String sku) {
+import jakarta.validation.constraints.NotBlank;
 
+public record GetProductBySkuDTO(
+        @NotBlank(message = "SKU is required") String sku) {
 }
