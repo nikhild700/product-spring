@@ -80,6 +80,7 @@ public class ProductService {
         Product product = new Product(dto.sku(), dto.name());
         product.setProductId(dto.productId());
         ProductDetails productDetails = new ProductDetails(product, dto.description(), dto.price());
+        productDetails.setDetailId(dto.detailId());
         productRepository.updateProductDetails(productDetails);
     }
 
