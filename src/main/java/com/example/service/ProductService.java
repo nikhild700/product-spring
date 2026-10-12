@@ -15,6 +15,8 @@ import com.example.dto.UpdateProductDTO;
 import com.example.exception.ProductNotFoundException;
 import com.example.dao.ProductRepository;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +31,7 @@ public class ProductService {
     }
 
     // GET /products/sku
+    @Cacheable(value = "productsBySku", key = "#dto.sku()")
     @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
     public ProductDetails getProductBySku(GetProductBySkuDTO dto) {
         // return productRepository.findBySku(dto.sku());
@@ -40,12 +43,14 @@ public class ProductService {
     }
 
     // GET /products/name
+    @Cacheable(value = "productsByName", key = "#dto.name()")
     @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
     public List<ProductDetails> getProductByName(GetProductByNameDTO dto) {
         return productRepository.findByName(dto.name());
     }
 
     // GET /products/price
+    @Cacheable(value = "productsByPriceRange", key = "#dto.minPrice() + '_' + #dto.maxPrice()")
     @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
     public List<ProductDetails> getProductsWithinPriceRange(GetProductWithinPriceRangeDTO dto) {
         double min = dto.minPrice();
@@ -55,6 +60,9 @@ public class ProductService {
     }
 
     // POST /products
+    @CacheEvict(value = {
+            "productsBySku", "productsByName", "productsByPriceRange"
+    }, allEntries = true)
     @Transactional(propagation = Propagation.REQUIRED)
     public int insertProductAndProductDetails(CreateProductDTO dto) {
         Product product = new Product(dto.sku(), dto.name());
@@ -67,6 +75,9 @@ public class ProductService {
     }
 
     // PUT /products/product
+    @CacheEvict(value = {
+            "productsBySku", "productsByName", "productsByPriceRange"
+    }, allEntries = true)
     @Transactional(propagation = Propagation.REQUIRED)
     public void updateProduct(UpdateProductDTO dto) {
         Product product = new Product(dto.sku(), dto.name());
@@ -75,14 +86,21 @@ public class ProductService {
     }
 
     // PUT /products/details
+    @CacheEvict(value = {
+            "productsBySku", "productsByName", "productsByPriceRange"
+    }, allEntries = true)
     @Transactional(propagation = Propagation.REQUIRED)
     public void updateProductDetails(UpdateProductDTO dto) {
         Product product = new Product(dto.sku(), dto.name());
         product.setProductId(dto.productId());
         ProductDetails productDetails = new ProductDetails(product, dto.description(), dto.price());
+        productDetails.setDetailId(dto.detailId());
         productRepository.updateProductDetails(productDetails);
     }
 
+    @CacheEvict(value = {
+            "productsBySku", "productsByName", "productsByPriceRange"
+    }, allEntries = true)
     @Transactional(propagation = Propagation.REQUIRED)
     public void updateProductAndProductDetails(UpdateProductDTO dto) {
         this.updateProduct(dto);
@@ -90,6 +108,9 @@ public class ProductService {
     }
 
     // DELETE /products/delete
+    @CacheEvict(value = {
+            "productsBySku", "productsByName", "productsByPriceRange"
+    }, allEntries = true)
     public void deleteProduct(RemoveProductDTO dto) {
         productRepository.deleteProduct(dto.productId());
     }
